@@ -30,8 +30,8 @@ public class UserDaoHibernateImpl implements UserDao {
         Transaction transaction = null;
 
         // auto close session object
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        try {
+            Session session = HibernateUtil.getSessionFactory().openSession();
             // start the transaction
             transaction = session.beginTransaction();
 
