@@ -1,5 +1,6 @@
 package jm.task.core.jdbc.dao;
 
+import jm.task.core.jdbc.util.Util;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
@@ -10,19 +11,57 @@ import jm.task.core.jdbc.util.HibernateUtil;
 import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
+    Session session = HibernateUtil.getSessionFactory().openSession();
+    Transaction transaction = null;
+//    private HibernateUtil worker = new HibernateUtil();
+
     public UserDaoHibernateImpl() {
 
     }
 
-
-    @Override
-    public void createUsersTable() {
+    void createSQLQueryExecuteUpdate(String sql) {
+        transaction = session.getTransaction();
+        transaction.begin();
+        session.createSQLQuery(sql).executeUpdate();
 
     }
 
     @Override
-    public void dropUsersTable() {
+    public void createUsersTable() {
+        final String INSERT_NEW = "CREATE TABLE IF NOT EXISTS `users` (\n" +
+                "  `id` bigint NOT NULL AUTO_INCREMENT,\n" +
+                "  `name` varchar(255) NOT NULL,\n" +
+                "  `lastName` varchar(255) NOT NULL,\n" +
+                "  `age` tinyint NOT NULL,\n" +
+                "  PRIMARY KEY (`id`)\n" +
+                ") ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8";
+        try {
+            // start the transaction
+            createSQLQueryExecuteUpdate(INSERT_NEW);
 
+            // commit transction
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+        }
+    }
+
+    @Override
+    public void dropUsersTable() {
+        final String INSERT_NEW = "DROP TABLE  IF EXISTS users";
+        try {
+            // start the transaction
+            createSQLQueryExecuteUpdate(INSERT_NEW);
+
+            // commit transction
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+        }
     }
 
     @Override
@@ -36,8 +75,8 @@ public class UserDaoHibernateImpl implements UserDao {
             transaction = session.beginTransaction();
 
             // save student object
-            User user = new User(name,lastName,age);
-            session.save(user);
+//            User user = new User(name,lastName,age);
+//            session.save(user);
 
             // commit transction
             transaction.commit();
