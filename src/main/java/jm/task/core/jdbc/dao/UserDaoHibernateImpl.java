@@ -1,6 +1,8 @@
 package jm.task.core.jdbc.dao;
 
 import jm.task.core.jdbc.util.Util;
+import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
@@ -8,7 +10,12 @@ import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.HibernateUtil;
 
 
+import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
+
+import static org.hibernate.hql.internal.antlr.SqlTokenTypes.MAX;
+import static org.hibernate.hql.internal.antlr.SqlTokenTypes.MIN;
 
 public class UserDaoHibernateImpl implements UserDao {
     Session session = HibernateUtil.getSessionFactory().openSession();
@@ -26,6 +33,7 @@ public class UserDaoHibernateImpl implements UserDao {
 
     }
 
+
     @Override
     public void createUsersTable() {
         final String INSERT_NEW = "CREATE TABLE IF NOT EXISTS `users` (\n" +
@@ -34,13 +42,15 @@ public class UserDaoHibernateImpl implements UserDao {
                 "  `lastName` varchar(255) NOT NULL,\n" +
                 "  `age` tinyint NOT NULL,\n" +
                 "  PRIMARY KEY (`id`)\n" +
-                ") ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8";
+                ") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8";
         try {
             // start the transaction
             createSQLQueryExecuteUpdate(INSERT_NEW);
 
             // commit transction
             transaction.commit();
+
+
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.rollback();
@@ -57,6 +67,7 @@ public class UserDaoHibernateImpl implements UserDao {
 
             // commit transction
             transaction.commit();
+
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.rollback();
@@ -66,64 +77,42 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void saveUser(String name, String lastName, byte age) {
-        Transaction transaction = null;
+        // start the transaction
+        transaction = session.beginTransaction();
 
-        // auto close session object
-        try {
-            Session session = HibernateUtil.getSessionFactory().openSession();
-            // start the transaction
-            transaction = session.beginTransaction();
+        User user = new User(name, lastName, age);
+        // save student object
+        session.save(user);
 
-            // save student object
-//            User user = new User(name,lastName,age);
-//            session.save(user);
+        // commit transction
+        transaction.commit();
 
-            // commit transction
-            transaction.commit();
-        } catch (Exception e) {
-            if (transaction != null) {
-                transaction.rollback();
-            }
-        }
     }
 
     @Override
     public void removeUserById(long id) {
+        transaction = session.beginTransaction();
+        User user;
 
+        user = (User) session.load(User.class, id);
+        session.delete(user);
+
+        //This makes the pending delete to be done
+        transaction.commit();
     }
 
     @Override
     public List<User> getAllUsers() {
-        return null;
-    }
+        List<User> users = new ArrayList<>();
 
-    @Override
-    public void cleanUsersTable() {
-
-    }
-}
-/*
-package net.javaguides.hibernate.dao;
-
-        import org.hibernate.Session;
-        import org.hibernate.Transaction;
-
-        import net.javaguides.hibernate.model.Student;
-        import net.javaguides.hibernate.util.HibernateUtil;
-
-public class StudentDao {
-    public void saveStudent(Student student) {
-
-        Transaction transaction = null;
-
-        // auto close session object
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-
+        String sql = "SELECT * FROM users";
+        try {
             // start the transaction
-            transaction = session.beginTransaction();
 
-            // save student object
-            session.save(student);
+            transaction = session.getTransaction();
+            transaction.begin();
+            Query query = session.createSQLQuery(sql).addEntity(User.class);
+            users = query.list();
 
             // commit transction
             transaction.commit();
@@ -132,5 +121,25 @@ public class StudentDao {
                 transaction.rollback();
             }
         }
+
+        return users;
     }
-}*/
+
+    @Override
+    public void cleanUsersTable() {
+        final String INSERT_NEW = "DELETE FROM users";
+        try {
+            // start the transaction
+            createSQLQueryExecuteUpdate(INSERT_NEW);
+
+            // commit transction
+            transaction.commit();
+
+
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+        }
+    }
+}

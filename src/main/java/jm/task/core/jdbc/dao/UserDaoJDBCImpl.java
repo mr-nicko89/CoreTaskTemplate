@@ -32,7 +32,7 @@ public class UserDaoJDBCImpl implements UserDao {
                 "  `lastName` varchar(255) NOT NULL,\n" +
                 "  `age` tinyint NOT NULL,\n" +
                 "  PRIMARY KEY (`id`)\n" +
-                ") ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8";
+                ") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8";
 
         preparedStatement = getPrepareStatement(INSERT_NEW);
         preparedStatement.execute();
