@@ -15,7 +15,7 @@ public class UserDaoHibernateImpl implements UserDao {
 
     }
 
-    void createSQLQueryExecuteUpdate(String sql) {
+    void createSQLQueryExecuteUpdate(String sql) throws Exception {
         Session session = sessionFactory.openSession();
         transaction = session.getTransaction();
         transaction.begin();
@@ -58,26 +58,37 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void saveUser(String name, String lastName, byte age) {
-        Session session = sessionFactory.openSession();
-        transaction = session.beginTransaction();
+        try {
+            Session session = sessionFactory.openSession();
+            transaction = session.beginTransaction();
 
-        User user = new User(name, lastName, age);
-        session.save(user);
+            User user = new User(name, lastName, age);
+            session.save(user);
 
-        transaction.commit();
-        session.close();
-
+            transaction.commit();
+            session.close();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+        }
     }
 
     @Override
     public void removeUserById(long id) {
-        Session session = sessionFactory.openSession();
+        try {
+            Session session = sessionFactory.openSession();
 
-        User user;
-        user = (User) session.load(User.class, id);
-        session.delete(user);
+            User user;
+            user = (User) session.load(User.class, id);
+            session.delete(user);
 
-        session.close();
+            session.close();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+        }
     }
 
     @Override
