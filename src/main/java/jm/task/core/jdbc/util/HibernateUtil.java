@@ -14,6 +14,7 @@ public class HibernateUtil {
     private static SessionFactory sessionFactory;
 
     public static SessionFactory getSessionFactory() {
+        //реализация синглтона. Если объекта нет - создаем, если есть просто возвращаем
         if (sessionFactory == null) {
             try {
                 Configuration configuration = new Configuration();

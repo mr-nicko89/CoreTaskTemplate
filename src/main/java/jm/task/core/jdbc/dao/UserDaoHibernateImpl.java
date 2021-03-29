@@ -1,35 +1,27 @@
 package jm.task.core.jdbc.dao;
 
-import jm.task.core.jdbc.util.Util;
-import org.hibernate.Criteria;
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-
+import org.hibernate.*;
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.HibernateUtil;
 
-
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.hibernate.hql.internal.antlr.SqlTokenTypes.MAX;
-import static org.hibernate.hql.internal.antlr.SqlTokenTypes.MIN;
-
 public class UserDaoHibernateImpl implements UserDao {
-    Session session = HibernateUtil.getSessionFactory().openSession();
-    Transaction transaction = null;
-//    private HibernateUtil worker = new HibernateUtil();
+    private SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
+    private Transaction transaction = null;
 
     public UserDaoHibernateImpl() {
 
     }
 
     void createSQLQueryExecuteUpdate(String sql) {
+        Session session = sessionFactory.openSession();
         transaction = session.getTransaction();
         transaction.begin();
         session.createSQLQuery(sql).executeUpdate();
+        transaction.commit();
+        session.close();
 
     }
 
@@ -44,13 +36,7 @@ public class UserDaoHibernateImpl implements UserDao {
                 "  PRIMARY KEY (`id`)\n" +
                 ") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8";
         try {
-            // start the transaction
             createSQLQueryExecuteUpdate(INSERT_NEW);
-
-            // commit transction
-            transaction.commit();
-
-
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.rollback();
@@ -62,12 +48,7 @@ public class UserDaoHibernateImpl implements UserDao {
     public void dropUsersTable() {
         final String INSERT_NEW = "DROP TABLE  IF EXISTS users";
         try {
-            // start the transaction
             createSQLQueryExecuteUpdate(INSERT_NEW);
-
-            // commit transction
-            transaction.commit();
-
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.rollback();
@@ -77,28 +58,29 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void saveUser(String name, String lastName, byte age) {
-        // start the transaction
+        Session session = sessionFactory.openSession();
         transaction = session.beginTransaction();
 
         User user = new User(name, lastName, age);
-        // save student object
         session.save(user);
 
-        // commit transction
         transaction.commit();
+        session.close();
 
     }
 
     @Override
     public void removeUserById(long id) {
-        transaction = session.beginTransaction();
-        User user;
 
+        Session session = sessionFactory.openSession();
+        transaction = session.beginTransaction();
+
+        User user;
         user = (User) session.load(User.class, id);
         session.delete(user);
 
-        //This makes the pending delete to be done
         transaction.commit();
+        session.close();
     }
 
     @Override
@@ -107,21 +89,19 @@ public class UserDaoHibernateImpl implements UserDao {
 
         String sql = "SELECT * FROM users";
         try {
-            // start the transaction
-
+            Session session = sessionFactory.openSession();
             transaction = session.getTransaction();
             transaction.begin();
             Query query = session.createSQLQuery(sql).addEntity(User.class);
             users = query.list();
 
-            // commit transction
             transaction.commit();
+            session.close();
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.rollback();
             }
         }
-
         return users;
     }
 
@@ -129,13 +109,7 @@ public class UserDaoHibernateImpl implements UserDao {
     public void cleanUsersTable() {
         final String INSERT_NEW = "DELETE FROM users";
         try {
-            // start the transaction
             createSQLQueryExecuteUpdate(INSERT_NEW);
-
-            // commit transction
-            transaction.commit();
-
-
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.rollback();
